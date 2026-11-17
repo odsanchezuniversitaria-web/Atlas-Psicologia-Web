@@ -31,7 +31,10 @@ namespace Meta.XR.MRUtilityKit
         private void OnDisable() => Application.quitting -= OnApplicationQuitting;
         private void OnApplicationQuitting() => _isQuitting = true;
 
+#if !UNITY_WEBGL || UNITY_EDITOR
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+#endif
         public static void CreateInstance()
         {
             var go = new GameObject(nameof(MRUKGlobalContext))

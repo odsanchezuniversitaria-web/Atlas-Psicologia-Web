@@ -53,7 +53,10 @@ namespace Meta.XR.MRUtilityKit
             }
         }
 
+#if !UNITY_WEBGL || UNITY_EDITOR
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+#endif
         private static void InitializeSharedLibrary()
         {
 #if UNITY_EDITOR

@@ -22,7 +22,7 @@ Para conversar desde el sitio publicado, Nexus debe entregar un JWT temporal vá
 
 ## Proyecto Unity
 
-El archivo anatómico grande utiliza Git LFS:
+El archivo anatómico grande y las bibliotecas nativas del SDK utilizan Git LFS:
 
 ```powershell
 git lfs install
@@ -40,6 +40,8 @@ En Hierarchy, `AtlasWeb` contiene las referencias editables de cámara, jugador,
 
 Para compilar, usar **Atlas Web → Compilar Web PC, Celular y WebVR**. El destino es `Builds/AtlasPages/`. Las carpetas de caché, credenciales, servidores antiguos y builds incompletos quedan fuera de Git.
 
+LiveKit nativo queda excluido del player WebGL; allí se utiliza su SDK JavaScript. Los inicializadores nativos de MRUK también se desactivan en navegador. Los cambios se describen en los archivos `ATLAS-WEBGL-PATCHES.txt` de esos paquetes.
+
 ## Comprobaciones locales
 
 ```powershell
@@ -49,6 +51,8 @@ node --test client.test.cjs voice.test.cjs
 node verify-build.cjs ../Builds/AtlasPages
 node serve.cjs
 ```
+
+Después de verificar el juego en navegador, `WebBuildTools/prepare-release.ps1` genera el ZIP, el manifiesto y su checksum en `ReleaseArtifacts/`.
 
 Node recomendado: **22.22.0 o posterior**. La vista local abre en `http://127.0.0.1:8860`.
 

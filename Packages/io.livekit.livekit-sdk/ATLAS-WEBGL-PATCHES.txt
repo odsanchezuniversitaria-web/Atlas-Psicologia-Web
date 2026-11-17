@@ -1,0 +1,10 @@
+Atlas browser compatibility
+
+The native LiveKit Unity runtime and its optional UniTask assembly exclude
+the WebGL player platform in their assembly definitions. Editor and native
+platforms retain the upstream SDK. The browser player uses the separate
+livekit-client JavaScript bundle in Assets/WebGLTemplates/AtlasNexus.
+
+This avoids invoking the native livekit_ffi initialization on a browser.
+Upstream base: 51a4ddb296b927c94afe531e2ca3a1d3ce339ba2.
+No generated Proto C# code was changed.

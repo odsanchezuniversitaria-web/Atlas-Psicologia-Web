@@ -1,0 +1,9 @@
+Atlas browser compatibility
+
+MRUK.Shared.InitializeSharedLibrary and MRUKGlobalContext.CreateInstance
+are not registered as RuntimeInitializeOnLoad callbacks on WebGL players.
+Their native/editor behavior is retained. The Atlas Web scenes use WebXR
+and do not use the native MRUK shared library.
+
+The upstream unconditional callbacks attempted to invoke native function
+pointers on WebGL and stopped the player before the first scene loaded.

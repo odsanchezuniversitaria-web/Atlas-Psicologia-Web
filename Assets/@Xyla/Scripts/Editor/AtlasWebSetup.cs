@@ -27,7 +27,7 @@ public static class AtlasWebSetup {
   AssetDatabase.SaveAssets();EditorSceneManager.OpenScene(Root+"AtlasWebInicio.unity");
   Debug.Log("[Atlas Web] Dos escenas y WebXR preparados únicamente en la copia independiente.");
  }
- static void Guard(){if(!Application.dataPath.Replace('\\','/').Equals("D:/1a Atlas Psicologia/Assets",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("Esta herramienta solo trabaja en la copia independiente.");}
+ static void Guard(){if(!File.Exists("Assets/@Xyla/Scripts/Web/AtlasWebRuntime.cs")||!File.Exists("Assets/WebGLTemplates/AtlasNexus/index.html"))throw new InvalidOperationException("Abre la copia web de Atlas para usar esta herramienta.");}
  static void MakeCopy(string source,string target){if(!File.Exists(Root+target+".unity")&&!AssetDatabase.CopyAsset(Root+source+".unity",Root+target+".unity"))throw new InvalidOperationException("No se pudo copiar "+source);}
  static void Prepare(string sceneName,bool landing){
   EditorSceneManager.OpenScene(Root+sceneName+".unity");

@@ -12,6 +12,9 @@ VoiceServer/venv/
 VoiceServer/
 MetaAarBackups/
 Packages/**/Samples~/
+Packages/io.livekit.livekit-sdk/client-sdk-rust~/
+Packages/io.livekit.livekit-sdk/Documentation~/
+Packages/io.livekit.livekit-sdk/Scripts~/
 Assets/UnityMcp/
 Assets/UnityMcp.meta
 SourceArt/
