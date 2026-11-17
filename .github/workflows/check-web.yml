@@ -1,0 +1,22 @@
+name: Verificar cliente web
+on:
+ push:
+  branches: [main]
+ pull_request:
+ workflow_dispatch:
+permissions:
+ contents: read
+jobs:
+ tests:
+  runs-on: ubuntu-latest
+  steps:
+   - uses: actions/checkout@v4
+   - uses: actions/setup-node@v4
+     with:
+      node-version: '22.22.0'
+      cache: npm
+      cache-dependency-path: WebBuildTools/package-lock.json
+   - run: npm ci --no-audit --no-fund
+     working-directory: WebBuildTools
+   - run: node --test client.test.cjs voice.test.cjs
+     working-directory: WebBuildTools

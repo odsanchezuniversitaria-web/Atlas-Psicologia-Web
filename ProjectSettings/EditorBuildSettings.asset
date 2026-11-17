@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/@Xyla/Scenes/AtlasWebInicio.unity
+    guid: bc958703d7611fb46a61fb0774adedf5
+  - enabled: 1
+    path: Assets/@Xyla/Scenes/AtlasWebLab.unity
+    guid: 67c19be0f68e3154b8e0cf9e9e81f099
+  m_configObjects:
+    OpenXRTestSettings: {fileID: 11400000, guid: 3e845df3fc604024e87be11a1abe3c10, type: 2}
+    WebXR.Settings: {fileID: 11400000, guid: b19061339a62355409b252a0e0a92ffe, type: 2}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 39019831afd539f43a95fef18d82d05f, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 9b412f65bcc6a794d8a863e610b29960, type: 2}

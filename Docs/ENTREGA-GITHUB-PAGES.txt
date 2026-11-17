@@ -1,0 +1,39 @@
+ENTREGA A COLABORADOR — ATLAS PSICOLOGÍA WEB
+
+La publicación es estática: no se instala un Gateway ni se configura LabKey.
+El ZIP de la release contiene el sitio listo para alojar, sin cachés de Unity.
+
+PUBLICACIÓN
+1. Descargar Atlas-Psicologia-Web.zip de Releases y conservar su estructura.
+2. En el repositorio de publicación, ir a Settings > Pages > GitHub Actions.
+3. El workflow pages.yml preparado descarga el ZIP de una release del MISMO
+   repositorio. Si se copia a otro repositorio, subir allí primero la release
+   con el ZIP o adaptar la descarga al repositorio privado de entrega.
+4. Ejecutar Publicar build en GitHub Pages, release_tag=web-v0.1.0.
+5. Usar la URL real entregada por el workflow y abrir el sitio mediante HTTPS.
+6. Integrarlo en Nexus usando el contrato de INTEGRACION-NEXUS.txt.
+
+No publicar únicamente index.html: necesita Build/, StreamingAssets/ y los JS.
+No activar compresión HTTP sobre los archivos .unityweb: Unity usa su propio
+descompresor incluido en el loader. GitHub Pages puede servir esos archivos
+sin configurar cabeceras Brotli en el servidor.
+No cambiar las rutas relativas por rutas absolutas como /Build/.
+No subir archivos .env ni colocar app_secret, API keys o JWT duraderos en JS.
+
+PRUEBA
+PC: entrar, mover cámara, seleccionar y devolver piezas, cambiar sistemas,
+abrir misiones y juegos, entrar a los cuatro casos y exportar resultados.
+Celular: comprobar joystick, mirada, botones, orientación y permisos de audio.
+Visor: comprobar entrada WebXR, menú inicial con rayo, desplazamiento, agarre,
+botones, vibración y conversación. Requiere navegador compatible y HTTPS.
+Para la IA validar con Nexus los permisos, el JWT y el CORS del backend.
+
+EL REPOSITORIO
+El proyecto Unity usa Git LFS para Assets/@Xyla/Data/Atlas.asset.
+El ZIP de publicación contiene archivos reales, no punteros de Git LFS.
+El workflow de Pages trabaja con ese ZIP y no recompila Unity ni necesita
+una licencia de Unity en GitHub Actions.
+
+GitHub Pages admite sitios de hasta 1 GB. El verificador de esta entrega
+comprueba ese límite antes de empaquetar y al ejecutar el workflow.
+Referencia: https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits

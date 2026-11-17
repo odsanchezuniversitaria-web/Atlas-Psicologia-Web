@@ -1,0 +1,2 @@
+* text=auto eol=lf
+Assets/@Xyla/Data/Atlas.asset filter=lfs diff=lfs merge=lfs -text

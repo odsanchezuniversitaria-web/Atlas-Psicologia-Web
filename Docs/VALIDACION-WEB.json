@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-17",
+  "unity": "6000.4.10f1",
+  "distribution": "static-github-pages",
+  "automatedTests": {"passed": 7, "failed": 0, "usesRealAIProviders": false},
+  "checks": {
+    "noLabKeyOrAdditionalGateway": true,
+    "credentialNotPersistedInBrowserStorage": true,
+    "hostOriginAndWindowValidated": true,
+    "profilesSeparated": true,
+    "liveKitPttAudioAndRpcMocks": true
+  },
+  "webglBuild": "building",
+  "browserSmokeTest": "pending",
+  "physicalMobileAndQuestTest": "not-performed",
+  "productionVoice": {
+    "status": "requires-nexus-integration",
+    "pagesOriginPreflightStatus": 403,
+    "pending": ["Allow the publication origin in backend CORS", "Deliver a temporary application JWT from the Nexus server"]
+  },
+  "nexusProgressAndOfficialGrades": "Host integration required; local progress and result export are implemented."
+}

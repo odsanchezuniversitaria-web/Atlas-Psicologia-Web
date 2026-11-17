@@ -1,0 +1,43 @@
+name: Publicar build en GitHub Pages
+on:
+ workflow_dispatch:
+  inputs:
+   release_tag:
+    description: Etiqueta de la release que contiene Atlas-Psicologia-Web.zip
+    required: true
+    default: web-v0.1.0
+permissions:
+ contents: read
+ pages: write
+ id-token: write
+concurrency:
+ group: pages
+ cancel-in-progress: false
+jobs:
+ prepare:
+  runs-on: ubuntu-latest
+  steps:
+   - uses: actions/checkout@v4
+   - name: Descargar el build preparado
+     env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+     run: |
+      gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern Atlas-Psicologia-Web.zip --dir "$RUNNER_TEMP/atlas"
+      mkdir -p site
+      unzip -q "$RUNNER_TEMP/atlas/Atlas-Psicologia-Web.zip" -d site
+      node WebBuildTools/verify-build.cjs site
+   - uses: actions/configure-pages@v5
+   - uses: actions/upload-pages-artifact@v3
+     with:
+      path: site
+ deploy:
+  needs: prepare
+  runs-on: ubuntu-latest
+  environment:
+   name: github-pages
+   url: ${{ steps.deployment.outputs.page_url }}
+  steps:
+   - name: Desplegar
+     id: deployment
+     uses: actions/deploy-pages@v4

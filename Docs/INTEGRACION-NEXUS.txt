@@ -1,0 +1,71 @@
+ATLAS ESTÁTICO EN NEXUS — CONTRATO DE INTEGRACIÓN v1
+
+No se usa LabKey, URL de Gateway ni QR de vinculación.
+El frontend llama directamente al backend Atlas ya existente:
+https://api.oscar-vr.iudcdesarrollo.tech/api/v1/atlas
+
+RESPONSABILIDADES DE NEXUS
+1. Autenticar al alumno en su plataforma.
+2. Obtener en SU SERVIDOR un JWT de aplicación válido para el backend Atlas.
+   El endpoint existente de autenticación es /api/v1/auth/login y necesita
+   app_id/app_secret; ese secreto jamás debe enviarse al navegador.
+3. Entregar al frontend sólo el token temporal, su caducidad y un identificador
+   opaco de perfil. El cliente lo conserva en memoria, no en localStorage.
+4. Autorizar el origen HTTPS REAL del sitio en ALLOWED_ORIGINS del backend.
+   Una prueba OPTIONS desde https://odsanchezuniversitaria-web.github.io
+   devolvió 403 el 17/11/2026. Este ajuste sigue pendiente en producción.
+5. Recibir y persistir progreso/resultados según la identidad autenticada.
+
+IFRAME
+<iframe src="https://CUENTA.github.io/REPOSITORIO/"
+ allow="microphone; xr-spatial-tracking; fullscreen" allowfullscreen></iframe>
+
+Para WebVR también se puede abrir en una pestaña completa desde Nexus.
+La lista nexusOrigins de atlas-config.js contiene los dominios actuales
+https://nexus.oscar-vr.iudcdesarrollo.tech y https://oscar-vr.iudcdesarrollo.tech.
+Si cambia Nexus, actualizar la lista con el origen exacto, nunca '*'.
+
+NEXUS -> ATLAS
+Al recibir atlas:ready, enviar al contentWindow del iframe o ventana abierta:
+
+{
+ type: "atlas:session",
+ version: 1,
+ accessToken: "JWT_TEMPORAL_OBTENIDO_EN_SERVIDOR",
+ expiresAt: 1795000000000,
+ profileId: "identificador-opaco-del-alumno-y-curso",
+ checkpoint: {schemaVersion:1,missions:[],milestones:[],flags:{},reports:{},poses:[]}
+}
+
+expiresAt se expresa en milisegundos Unix y debe ser una fecha futura real;
+el número mostrado es sólo un ejemplo. La sesión del navegador dura como
+máximo una hora y puede renovarse mediante otro atlas:session.
+profileId admite 1-100 caracteres alfanuméricos, guion y guion bajo.
+Usar postMessage(mensaje, ORIGEN_EXACTO_DE_ATLAS), no '*'.
+Atlas acepta estos mensajes sólo desde parent/opener y dominios permitidos.
+
+ATLAS -> NEXUS
+atlas:ready             cliente listo para recibir sesión
+atlas:connected         acceso recibido por el cliente
+atlas:session-required  acceso caducado; Nexus debe renovarlo
+atlas:progress          {profileId, checkpoint}; guardar en el servidor de Nexus
+atlas:results           {profileId, report}; se emite al exportar resultados
+
+Todos incluyen version:1. Validar event.origin y event.source en Nexus.
+El campo accessToken NO aparece en los eventos de progreso ni resultados.
+Nexus confirma un guardado con:
+{type:"atlas:progress-ack",version:1,profileId:"mismo-perfil"}
+Para salir: {type:"atlas:logout",version:1}.
+
+NOTAS
+El guardado local funciona sin Nexus y está separado por perfil.
+La sincronización entre dispositivos y el registro oficial de notas son
+responsabilidad del integrador de Nexus. No se afirma que estén desplegados.
+Los porcentajes de la entrevista se obtienen del backend de evaluación;
+Nexus debe validar la sesión/evaluación en servidor antes de usarlos como nota
+oficial. Un dato recibido del navegador no acredita por sí solo una calificación.
+
+La conversación utiliza /livekit/session y el mismo agente/voz del backend.
+Los recursos locales de voz del proyecto se conservan. Sin un token y CORS
+válidos no habrá conversación remota, aunque se pueda explorar el Atlas.
+GitHub Pages aloja la aplicación, pero no ejecuta STT, LLM ni TTS en servidor.
