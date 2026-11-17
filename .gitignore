@@ -43,3 +43,8 @@ WebBuildTools/node_modules/
 *.keystore
 *.jks
 
+# Local editor imports and diagnostic artifacts
+.vsconfig
+IMPORT-REPORT.txt
+LocalPackages/
+MATERIALES-ANATOMICOS.md

@@ -2,7 +2,11 @@
   "date": "2026-11-17",
   "unity": "6000.4.10f1",
   "distribution": "static-github-pages",
-  "automatedTests": {"passed": 7, "failed": 0, "usesRealAIProviders": false},
+  "automatedTests": {
+    "passed": 7,
+    "failed": 0,
+    "usesRealAIProviders": false
+  },
   "checks": {
     "noLabKeyOrAdditionalGateway": true,
     "credentialNotPersistedInBrowserStorage": true,
@@ -10,13 +14,34 @@
     "profilesSeparated": true,
     "liveKitPttAudioAndRpcMocks": true
   },
-  "webglBuild": "building",
-  "browserSmokeTest": "pending",
+  "webglBuild": {
+    "status": "succeeded",
+    "bytes": 155519400,
+    "output": "Builds/AtlasPages",
+    "unity": "6000.4.10f1",
+    "release": "web-v0.1.0"
+  },
+  "browserSmokeTest": {
+    "status": "passed",
+    "environment": "Desktop browser, local HTTP",
+    "checks": [
+      "Initial menu and transitions",
+      "Anatomy render and system visibility",
+      "Piece ray selection with mission feedback",
+      "Patient direct entry and furnished office",
+      "Patient case selection and recommendations"
+    ],
+    "startupErrors": 0,
+    "remoteVoiceTested": false
+  },
   "physicalMobileAndQuestTest": "not-performed",
   "productionVoice": {
     "status": "requires-nexus-integration",
     "pagesOriginPreflightStatus": 403,
-    "pending": ["Allow the publication origin in backend CORS", "Deliver a temporary application JWT from the Nexus server"]
+    "pending": [
+      "Allow the publication origin in backend CORS",
+      "Deliver a temporary application JWT from the Nexus server"
+    ]
   },
   "nexusProgressAndOfficialGrades": "Host integration required; local progress and result export are implemented."
 }
