@@ -3,7 +3,9 @@
   "rootNamespace": "LiveKit",
   "references": [],
   "includePlatforms": [],
-  "excludePlatforms": "WebGL",
+  "excludePlatforms": [
+    "WebGL"
+  ],
   "allowUnsafeCode": true,
   "overrideReferences": true,
   "precompiledReferences": [

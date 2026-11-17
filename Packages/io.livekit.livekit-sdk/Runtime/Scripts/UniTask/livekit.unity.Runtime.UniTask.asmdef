@@ -7,7 +7,9 @@
     "UniTask.Linq"
   ],
   "includePlatforms": [],
-  "excludePlatforms": "WebGL",
+  "excludePlatforms": [
+    "WebGL"
+  ],
   "allowUnsafeCode": false,
   "overrideReferences": false,
   "precompiledReferences": [],
