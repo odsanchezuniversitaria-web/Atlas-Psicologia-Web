@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "unity": "6000.4.10f1",
   "distribution": "static-github-pages",
   "automatedTests": {
-    "passed": 7,
+    "passed": 11,
     "failed": 0,
     "usesRealAIProviders": false
   },
@@ -36,11 +36,42 @@
   },
   "physicalMobileAndQuestTest": "not-performed",
   "productionVoice": {
-    "status": "requires-nexus-integration",
-    "pagesOriginPreflightStatus": 403,
+    "status": "api-and-real-voice-probes-passed-nexus-auth-pending",
+    "backendCommit": "3c4c237",
+    "cors": {
+      "approved": {
+        "status": 204,
+        "allowOrigin": "https://odsanchezuniversitaria-web.github.io"
+      },
+      "unapproved": {
+        "status": 403,
+        "allowOrigin": null
+      },
+      "anonymous": {
+        "status": 401,
+        "allowOrigin": "https://odsanchezuniversitaria-web.github.io"
+      }
+    },
+    "realVoiceProbes": [
+      {
+        "role": "atlas",
+        "state": "answer",
+        "session_request_seconds": 0.484,
+        "reply_voiced_seconds": 12.98,
+        "first_audio_after_release_seconds": 3.438
+      },
+      {
+        "role": "patient",
+        "state": "patient_answer",
+        "session_request_seconds": 0.5,
+        "reply_voiced_seconds": 16.88,
+        "first_audio_after_release_seconds": 4.312
+      }
+    ],
+    "scope": "Production synthetic learner, web JWT, WebRTC and real STT/LLM/TTS; not a physical browser microphone or authenticated Nexus student.",
     "pending": [
-      "Allow the publication origin in backend CORS",
-      "Deliver a temporary application JWT from the Nexus server"
+      "Identify and integrate the real Nexus frontend/backend session and enrollment",
+      "Publish Pages at its definitive origin and configure iframe microphone policy in Nexus"
     ]
   },
   "nexusProgressAndOfficialGrades": "Host integration required; local progress and result export are implemented."

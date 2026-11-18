@@ -9,16 +9,22 @@ RESPONSABILIDADES DE NEXUS
 2. Obtener en SU SERVIDOR un JWT de aplicación válido para el backend Atlas.
    El endpoint existente de autenticación es /api/v1/auth/login y necesita
    app_id/app_secret; ese secreto jamás debe enviarse al navegador.
-3. Entregar al frontend sólo el token temporal, su caducidad y un identificador
+3. Canjear ese JWT desde el servidor en POST /api/v1/atlas/web/session, con
+   Authorization: Bearer <JWT de aplicación> y JSON {profileId, origin}.
+   No enviar Origin en esa llamada servidor a servidor.
+   Entregar al frontend sólo el accessToken web de 10 minutos, su caducidad
+   y un identificador
    opaco de perfil. El cliente lo conserva en memoria, no en localStorage.
-4. Autorizar el origen HTTPS REAL del sitio en ALLOWED_ORIGINS del backend.
-   Una prueba OPTIONS desde https://odsanchezuniversitaria-web.github.io
-   devolvió 403 el 17/11/2026. Este ajuste sigue pendiente en producción.
+4. ATLAS_WEB_ORIGINS autoriza únicamente las rutas Atlas. Incluye por defecto
+   https://odsanchezuniversitaria-web.github.io y los dominios actuales.
+   Producción verificada el 18/11/2026: preflight 204 para Pages, 403 para
+   dominios ajenos y 401 al solicitar una sesión sin autenticación.
+   Al cambiar la cuenta de Pages, configurar la lista completa de orígenes.
 5. Recibir y persistir progreso/resultados según la identidad autenticada.
 
 IFRAME
 <iframe src="https://CUENTA.github.io/REPOSITORIO/"
- allow="microphone; xr-spatial-tracking; fullscreen" allowfullscreen></iframe>
+ allow="microphone; autoplay; xr-spatial-tracking; fullscreen" allowfullscreen></iframe>
 
 Para WebVR también se puede abrir en una pestaña completa desde Nexus.
 La lista nexusOrigins de atlas-config.js contiene los dominios actuales
@@ -38,8 +44,8 @@ Al recibir atlas:ready, enviar al contentWindow del iframe o ventana abierta:
 }
 
 expiresAt se expresa en milisegundos Unix y debe ser una fecha futura real;
-el número mostrado es sólo un ejemplo. La sesión del navegador dura como
-máximo una hora y puede renovarse mediante otro atlas:session.
+el número mostrado es sólo un ejemplo. El JWT web dura diez minutos.
+Renovar un minuto antes desde el servidor y enviar otro atlas:session.
 profileId admite 1-100 caracteres alfanuméricos, guion y guion bajo.
 Usar postMessage(mensaje, ORIGEN_EXACTO_DE_ATLAS), no '*'.
 Atlas acepta estos mensajes sólo desde parent/opener y dominios permitidos.
@@ -69,3 +75,11 @@ La conversación utiliza /livekit/session y el mismo agente/voz del backend.
 Los recursos locales de voz del proyecto se conservan. Sin un token y CORS
 válidos no habrá conversación remota, aunque se pueda explorar el Atlas.
 GitHub Pages aloja la aplicación, pero no ejecuta STT, LLM ni TTS en servidor.
+
+IMPLEMENTACIÓN
+NexusIntegration/atlas-session-server.mjs se importa en el backend Nexus.
+NexusIntegration/atlas-host.mjs se importa en su frontend: valida iframe/origen,
+entrega la sesión, renueva automáticamente y cierra el acceso al salir.
+Ver NexusIntegration/README.md para el adaptador de matrícula, sesión, CSRF,
+Permissions-Policy y CSP del Nexus real. El proxy QR antiguo no es el LMS.
+

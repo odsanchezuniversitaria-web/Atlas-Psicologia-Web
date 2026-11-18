@@ -18,7 +18,7 @@ El repositorio de entrega permanece **privado**. La publicación de Pages la rea
 
 El transporte web conserva LiveKit, los comandos de Atlas, el contexto de la pieza y las respuestas de la paciente. Mantiene la voz seleccionada en el backend.
 
-Para conversar desde el sitio publicado, Nexus debe entregar un JWT temporal válido y el backend debe permitir el origen de Pages en CORS. **La IA no se habilita colocando claves privadas en este repositorio.** Sin sesión se puede explorar y guardar avance local, pero no se presenta una conexión de voz inexistente como funcional.
+El backend ya emite JWT web de diez minutos y permite el origen actual de Pages en CORS. Para conversar desde la cuenta del alumno falta montar los módulos incluidos en el inicio de sesión y la matrícula del Nexus real. **La IA no se habilita colocando claves privadas en este repositorio.** Sin sesión se puede explorar y guardar avance local, pero no se presenta una conexión de voz inexistente como funcional.
 
 ## Proyecto Unity
 
@@ -67,3 +67,9 @@ Los ensayos automatizados usan dobles de LiveKit, no consumen proveedores de IA 
 ## Atribuciones
 
 Se conservan los avisos de licencia de los modelos, materiales, SDK de Meta, LiveKit y WebXR incluidos en sus directorios. Los ejemplos opcionales `Samples~` de los SDK se excluyen de la entrega, incluidas sus configuraciones de acceso de demostración; no son necesarios para Atlas. Esta entrega privada no sustituye sus licencias ni concede permisos adicionales sobre esos recursos.
+
+## Token temporal de Nexus
+
+La integración de servidor y navegador está en [NexusIntegration](NexusIntegration/README.md). El backend emite JWT web de diez minutos limitados al perfil y al origen de Atlas. El host renueva la sesión y cierra la voz al salir; el secreto de aplicación permanece en el servidor de Nexus.
+
+La conexión con el inicio de sesión y la matrícula debe montarse en el repositorio real de Nexus. El dominio nexus.oscar-vr.iudcdesarrollo.tech sigue sirviendo el antiguo proxy QR.
