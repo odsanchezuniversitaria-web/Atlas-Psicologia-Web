@@ -5,7 +5,7 @@ on:
    release_tag:
     description: Etiqueta de la release que contiene Atlas-Psicologia-Web.zip
     required: true
-    default: web-v0.1.3
+    default: web-v0.1.4
 permissions:
  contents: read
  pages: write

@@ -10,7 +10,7 @@ Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegado
 
 ## Entrega al colaborador
 
-1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.3`.
+1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.4`.
 2. Descomprimirlo: `index.html`, `Build/`, `StreamingAssets/` y los archivos de interfaz deben conservarse juntos.
 3. Publicarlo desde la raíz de un sitio HTTPS. Los recursos usan rutas relativas y admiten la subcarpeta de un repositorio de GitHub Pages.
 4. Para usar el workflow preparado, habilitar **Settings → Pages → GitHub Actions** y ejecutar **Publicar build en GitHub Pages** con la etiqueta de la release.
@@ -45,6 +45,14 @@ En Hierarchy, `AtlasWeb` contiene las referencias editables de cámara, jugador,
 Para compilar, usar **Atlas Web → Compilar Web PC, Celular y WebVR**. El destino es `Builds/AtlasPages/`. Las carpetas de caché, credenciales, servidores antiguos y builds incompletos quedan fuera de Git.
 
 LiveKit nativo queda excluido del player WebGL; allí se utiliza su SDK JavaScript. Los inicializadores nativos de MRUK también se desactivan en navegador. Los cambios se describen en los archivos `ATLAS-WEBGL-PATCHES.txt` de esos paquetes.
+
+## Acabados anatómicos
+
+Para ajustar los músculos, selecciona `Assets/@Xyla/Resources/SkeletalMuscle.mat` en Unity. En el Inspector puedes cambiar el albedo (mapa de color), las repeticiones por metro y la intensidad. Los materiales de miocardio, hígado, riñón, piel y cerebro están en esa misma carpeta. El hueso cortical se ajusta en `Assets/Resources/CorticalBone.mat`.
+
+`Assets/@Xyla/Resources/AtlasSurfaceDetail.png` contiene el detalle fino compartido por varios tejidos. Si lo editas, conserva sus canales RGBA, la importación lineal y los mipmaps. Al agarrar, girar o ampliar una pieza, conserva el tejido y la orientación de la textura que tenía en el cuerpo.
+
+La orientación de las fibras se aproxima a partir de la forma de cada malla. Si cambias la geometría o el orden de las piezas, ejecuta `python WebBuildTools/bake-surface-frames.py` desde la raíz con Python 3 y NumPy. Se regeneran `AtlasSurfaceFrames.bytes` (ejes) y `AtlasDistalTendons.bytes` (transiciones tendinosas estimadas) en `Assets/@Xyla/Resources`. Puedes añadir `--check` para comprobar que las tablas corresponden al modelo.
 
 ## Comprobaciones locales
 

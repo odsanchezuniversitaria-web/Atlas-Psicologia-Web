@@ -1,2 +1,4 @@
 * text=auto eol=lf
 Assets/@Xyla/Data/Atlas.asset filter=lfs diff=lfs merge=lfs -text
+Assets/@Xyla/Resources/AtlasSurfaceFrames.bytes binary
+Assets/@Xyla/Resources/AtlasDistalTendons.bytes binary

@@ -9,7 +9,7 @@ PUBLICACIÓN
 3. El workflow pages.yml preparado descarga el ZIP de una release del MISMO
    repositorio. Si se copia a otro repositorio, subir allí primero la release
    con el ZIP o adaptar la descarga al repositorio privado de entrega.
-4. Ejecutar Publicar build en GitHub Pages, release_tag=web-v0.1.0.
+4. Ejecutar Publicar build en GitHub Pages e introducir en release_tag la etiqueta de la release que contiene el ZIP descargado.
 5. Usar la URL real entregada por el workflow y abrir el sitio mediante HTTPS.
 6. Integrarlo en Nexus usando el contrato de INTEGRACION-NEXUS.txt.
 

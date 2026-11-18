@@ -30,9 +30,7 @@ namespace Xyla
         [Range(0.05f, 1f)] public float escalaMinima = 0.2f;
         [Range(1f, 8f)] public float escalaMaxima = 4f;
 
-        readonly Dictionary<string, Material> batchMaterials = new Dictionary<string, Material>();
-        readonly Dictionary<string, Material> pieceMaterials = new Dictionary<string, Material>();
-        readonly Dictionary<AtlasSurfaceKind, Material> tissueMaterials = new Dictionary<AtlasSurfaceKind, Material>();
+        AtlasStudySurfaces surfaces;
         readonly Dictionary<string, List<MeshRenderer>> batchRenderers =
             new Dictionary<string, List<MeshRenderer>>();
         QuestAtlasPiece[] pieces;
@@ -43,9 +41,8 @@ namespace Xyla
         public QuestAtlasVoiceAgent Voice { get; private set; }
         QuestAtlasSelectionAudio selectionAudio;
         QuestAtlasPullProvider pullProvider;
-        Material boneMaterial, brainMaterial;
         public bool BoneTextureEnabled { get; private set; } = true;
-        Texture2D states, boneMask, brainMask, partColorMap;
+        Texture2D states;
         Color[] statePixels;
         int activeSystem;
         bool showAllVisuals;
@@ -98,7 +95,7 @@ void Start()
 
             selectionAudio = gameObject.AddComponent<QuestAtlasSelectionAudio>();
             pullProvider = gameObject.AddComponent<QuestAtlasPullProvider>();
-            CreateMaterials();
+            surfaces = new AtlasStudySurfaces(data, states);
             CreateSystemReturnCores();
             CreateBatchRenderers();
             ApplyBatchState();
@@ -194,118 +191,6 @@ void Update()
             }
         }
 
-        void CreateMaterials()
-        {
-            boneMaterial = new Material(Resources.Load<Material>("CorticalBone"));
-            boneMaterial.name = "Huesos · superficie cortical";
-            Material brainTemplate = Resources.Load<Material>("BrainTissue");
-            if (!brainTemplate) throw new InvalidOperationException("Falta el material BrainTissue del cerebro.");
-            brainMaterial = new Material(brainTemplate) { name = "Cerebro · tejido cortical realista" };
-            boneMask = new Texture2D(states.width, 1, TextureFormat.R8, false, true)
-                { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-            brainMask = new Texture2D(states.width, 1, TextureFormat.R8, false, true)
-                { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-            partColorMap = new Texture2D(states.width, 1, TextureFormat.RGBA32, false, true)
-                { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-            var bonePixels = new Color[states.width];
-            var brainPixels = new Color[states.width];
-            var partColors = new Color[states.width];
-            for (int i = 0; i < data.parts.Length; i++)
-            {
-                AtlasPart part = data.parts[i];
-                AtlasSurfaceKind kind = AtlasTissueProfile.Kind(part);
-                bonePixels[i] = IsBone(part) ? Color.white : Color.black;
-                brainPixels[i] = IsBrainTissue(part) ? Color.white : Color.black;
-                string texture = AtlasTissueProfile.TextureResource(kind);
-                Color color = AtlasTissueProfile.Color(kind, part.system);
-                color.a = part.system == "muscular" && texture == "Myocardium"
-                    ? 1f : texture != null && texture == AtlasTissueProfile.BatchTextureResource(part.system)
-                    ? .5f : 0f;
-                partColors[i] = color;
-            }
-            boneMask.SetPixels(bonePixels); boneMask.Apply(false, true);
-            brainMask.SetPixels(brainPixels); brainMask.Apply(false, true);
-            partColorMap.SetPixels(partColors); partColorMap.Apply(false, true);
-            Shader pieceShader = Shader.Find("Universal Render Pipeline/Lit");
-            if (pieceShader == null) pieceShader = Shader.Find("Standard");
-            if (pieceShader == null) pieceShader = Shader.Find("Unlit/Color");
-
-            foreach (string id in AtlasSystems.Ids)
-            {
-                Color color = AtlasSystems.ColorFor(id);
-                var batch = new Material(data.shader) { name = "Lote " + AtlasSystems.Name(id) };
-                batch.SetColor("_Tint", color);
-                batch.SetTexture("_PartData", states);
-                batch.SetTexture("_BoneMask", boneMask);
-                batch.SetTexture("_BoneMap", boneMaterial.GetTexture("_BoneMap"));
-                batch.SetFloat("_TextureScale", boneMaterial.GetFloat("_TextureScale"));
-                batch.SetFloat("_TextureStrength", 1f);
-                if (id == "nervous")
-                {
-                    batch.SetTexture("_BrainMask", brainMask);
-                    batch.SetTexture("_BrainMap", brainMaterial.GetTexture("_BrainMap"));
-                    batch.SetFloat("_BrainScale", brainMaterial.GetFloat("_BrainScale"));
-                    batch.SetFloat("_BrainStrength", brainMaterial.GetFloat("_BrainStrength"));
-                    batch.EnableKeyword("ATLAS_BRAIN_SURFACE");
-                }
-                if (id == "skeletal") batch.EnableKeyword("ATLAS_BONE_SURFACE");
-                if (id != "skeletal" && id != "nervous")
-                {
-                    batch.SetTexture("_PartColor", partColorMap);
-                    string textureResource = AtlasTissueProfile.BatchTextureResource(id);
-                    Material tissueTemplate = textureResource == null ? null : Resources.Load<Material>(textureResource);
-                    if (textureResource != null && !tissueTemplate)
-                        throw new InvalidOperationException("Falta el material " + textureResource + ".");
-                    batch.SetTexture("_TissueMap", tissueTemplate ? tissueTemplate.GetTexture("_TissueMap") : Texture2D.whiteTexture);
-                    batch.SetFloat("_TissueScale", tissueTemplate ? tissueTemplate.GetFloat("_TissueScale") : 13f);
-                    batch.SetFloat("_TissueStrength", tissueTemplate ? tissueTemplate.GetFloat("_TissueStrength") : 0f);
-                    if (id == "muscular")
-                    {
-                        Material secondary = Resources.Load<Material>("Myocardium");
-                        if (!secondary) throw new InvalidOperationException("Falta el material Myocardium.");
-                        batch.SetTexture("_TissueMap2", secondary.GetTexture("_TissueMap"));
-                        batch.SetFloat("_TissueScale2", secondary.GetFloat("_TissueScale"));
-                        batch.SetFloat("_TissueStrength2", secondary.GetFloat("_TissueStrength"));
-                    }
-                    batch.EnableKeyword("ATLAS_TISSUE_SURFACE");
-                }
-                batchMaterials[id] = batch;
-
-                var piece = new Material(pieceShader) { name = "Pieza " + AtlasSystems.Name(id) };
-                if (piece.HasProperty("_BaseColor")) piece.SetColor("_BaseColor", color);
-                if (piece.HasProperty("_Color")) piece.SetColor("_Color", color);
-                if (piece.HasProperty("_Smoothness")) piece.SetFloat("_Smoothness", .28f);
-                pieceMaterials[id] = piece;
-            }
-        }
-
-        Material MaterialForTissue(AtlasPart part)
-        {
-            AtlasSurfaceKind kind = AtlasTissueProfile.Kind(part);
-            if (kind == AtlasSurfaceKind.Default) return pieceMaterials[part.system];
-            if (tissueMaterials.TryGetValue(kind, out Material cached)) return cached;
-            string resource = AtlasTissueProfile.TextureResource(kind);
-            Material material;
-            if (resource != null)
-            {
-                Material template = Resources.Load<Material>(resource);
-                if (!template) throw new InvalidOperationException("Falta el material " + resource + ".");
-                material = new Material(template);
-            }
-            else
-            {
-                material = new Material(pieceMaterials[part.system]);
-                Color color = AtlasTissueProfile.Color(kind, part.system);
-                if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-                if (material.HasProperty("_Color")) material.SetColor("_Color", color);
-                if (material.HasProperty("_Smoothness"))
-                    material.SetFloat("_Smoothness", AtlasTissueProfile.Smoothness(kind));
-            }
-            material.name = "Tejido · " + kind;
-            tissueMaterials.Add(kind, material);
-            return material;
-        }
-
 void CreateBatchRenderers()
         {
             foreach (AtlasBatch batch in data.batches)
@@ -314,7 +199,7 @@ void CreateBatchRenderers()
                 go.transform.SetParent(transform, false);
                 go.AddComponent<MeshFilter>().sharedMesh = batch.mesh;
                 var renderer = go.AddComponent<MeshRenderer>();
-                renderer.sharedMaterial = batchMaterials[batch.system];
+                renderer.sharedMaterial = surfaces.Assembled;
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
 
@@ -406,8 +291,7 @@ QuestAtlasPiece CreatePiece(int index)
 
             visual.AddComponent<MeshFilter>().sharedMesh = part.mesh;
             var renderer = visual.AddComponent<MeshRenderer>();
-            Material material = IsBone(part) ? boneMaterial
-                : IsBrainTissue(part) ? brainMaterial : MaterialForTissue(part);
+            Material material = surfaces.Loose;
             var materials = new Material[Mathf.Max(1, part.mesh.subMeshCount)];
             for (int m = 0; m < materials.Length; m++) materials[m] = material;
             renderer.sharedMaterials = materials;
@@ -719,8 +603,7 @@ void UpdateStatus(string transient = null)
         {
             RecordUndo("cambiar acabado óseo");
             BoneTextureEnabled = !BoneTextureEnabled;
-            boneMaterial.SetFloat("_TextureStrength", BoneTextureEnabled ? 1f : 0f);
-            batchMaterials["skeletal"].SetFloat("_TextureStrength", BoneTextureEnabled ? 1f : 0f);
+            surfaces.SetBoneTexture(BoneTextureEnabled);
             menu.Refresh();
         }
 
@@ -730,14 +613,7 @@ void UpdateStatus(string transient = null)
         {
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
             if (states != null) Destroy(states);
-            if (boneMask != null) Destroy(boneMask);
-            if (brainMask != null) Destroy(brainMask);
-            if (partColorMap != null) Destroy(partColorMap);
-            if (boneMaterial != null) Destroy(boneMaterial);
-            if (brainMaterial != null) Destroy(brainMaterial);
-            foreach (Material material in batchMaterials.Values) Destroy(material);
-            foreach (Material material in pieceMaterials.Values) Destroy(material);
-            foreach (Material material in tissueMaterials.Values) Destroy(material);
+            surfaces?.Dispose();
         }
     
 
