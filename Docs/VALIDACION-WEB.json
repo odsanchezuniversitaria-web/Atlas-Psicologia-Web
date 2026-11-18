@@ -3,7 +3,7 @@
   "unity": "6000.4.10f1",
   "distribution": "static-github-pages",
   "automatedTests": {
-    "passed": 16,
+    "passed": 20,
     "failed": 0,
     "usesRealAIProviders": false
   },
@@ -88,6 +88,8 @@
       "Late permission cancellation releases microphone"
     ],
     "physicalMicrophone": "User must run the browser test to confirm their own device",
-    "sessionState": "Standalone Pages clearly reports missing Nexus session instead of retrying connection status"
-  }
+    "sessionState": "Standalone Pages clearly reports missing Nexus session instead of retrying connection status",
+    "inputSelector": "Lists browser audio inputs, displays opened track label, reuses selected device for both LiveKit roles, retains peak level"
+  },
+  "webShellRelease": "web-v0.1.3"
 }

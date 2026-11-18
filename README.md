@@ -10,7 +10,7 @@ Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegado
 
 ## Entrega al colaborador
 
-1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.2`.
+1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.3`.
 2. Descomprimirlo: `index.html`, `Build/`, `StreamingAssets/` y los archivos de interfaz deben conservarse juntos.
 3. Publicarlo desde la raíz de un sitio HTTPS. Los recursos usan rutas relativas y admiten la subcarpeta de un repositorio de GitHub Pages.
 4. Para usar el workflow preparado, habilitar **Settings → Pages → GitHub Actions** y ejecutar **Publicar build en GitHub Pages** con la etiqueta de la release.
@@ -81,3 +81,5 @@ La conexión con el inicio de sesión y la matrícula debe montarse en el reposi
 ## Comprobar el micrófono
 
 En el panel **Asistente**, pulsa **Probar micrófono**, permite el acceso y habla. El medidor muestra la señal durante ocho segundos; no graba ni envía audio. Distingue permiso bloqueado, dispositivo ausente y ausencia de señal. Abrir Pages sin una sesión de Nexus permite esta prueba local, pero no activa la conversación con IA.
+
+Selecciona **Entrada de micrófono** para elegir el dispositivo de tus auriculares. **Actualizar entradas** vuelve a consultar los dispositivos sin grabar audio. Al probar se muestra el nombre de la entrada abierta. La misma selección se utiliza para Atlas y María cuando Nexus habilita la conversación. La barra conserva el nivel máximo al terminar.
