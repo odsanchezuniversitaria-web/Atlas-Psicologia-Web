@@ -1,5 +1,9 @@
 # Atlas Psicología Web
 
+▶ **[Abrir Atlas en el navegador](https://odsanchezuniversitaria-web.github.io/Atlas-Psicologia-Web/)**
+
+Este enlace abre la aplicación. Para acceder a la voz con IA, Nexus debe entregar una sesión válida.
+
 Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegador de PC, celular y WebVR. Incluye anatomía, Atlas, María, cuatro casos educativos, misiones y juegos.
 
 **La distribución utiliza archivos estáticos de GitHub Pages. No requiere LabKey ni un Gateway adicional.** La conversación con IA utiliza el backend Atlas existente mediante LiveKit y un token temporal que entrega Nexus. Las claves de proveedores permanecen en el servidor.
@@ -12,7 +16,7 @@ Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegado
 4. Para usar el workflow preparado, habilitar **Settings → Pages → GitHub Actions** y ejecutar **Publicar build en GitHub Pages** con la etiqueta de la release.
 5. Integrar la sesión de Nexus siguiendo [INTEGRACION-NEXUS.txt](Docs/INTEGRACION-NEXUS.txt).
 
-El repositorio de entrega permanece **privado**. La publicación de Pages la realiza el colaborador en el repositorio y cuenta que corresponda. GitHub Free permite Pages en repositorios públicos; Pages desde un repositorio privado requiere un plan compatible. [Documentación de GitHub](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
+El repositorio y la aplicación de GitHub Pages son **públicos**. El colaborador puede abrir el enlace anterior o integrar la aplicación en Nexus. GitHub Free permite Pages en repositorios públicos; Pages desde un repositorio privado requiere un plan compatible. [Documentación de GitHub](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
 
 ## Estado de la IA
 
@@ -66,7 +70,7 @@ Los ensayos automatizados usan dobles de LiveKit, no consumen proveedores de IA 
 
 ## Atribuciones
 
-Se conservan los avisos de licencia de los modelos, materiales, SDK de Meta, LiveKit y WebXR incluidos en sus directorios. Los ejemplos opcionales `Samples~` de los SDK se excluyen de la entrega, incluidas sus configuraciones de acceso de demostración; no son necesarios para Atlas. Esta entrega privada no sustituye sus licencias ni concede permisos adicionales sobre esos recursos.
+Se conservan los avisos de licencia de los modelos, materiales, SDK de Meta, LiveKit y WebXR incluidos en sus directorios. Los ejemplos opcionales `Samples~` de los SDK se excluyen de la entrega, incluidas sus configuraciones de acceso de demostración; no son necesarios para Atlas. Esta entrega no sustituye sus licencias ni concede permisos adicionales sobre esos recursos.
 
 ## Token temporal de Nexus
 
