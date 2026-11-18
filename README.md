@@ -10,7 +10,7 @@ Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegado
 
 ## Entrega al colaborador
 
-1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.0`.
+1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.2`.
 2. Descomprimirlo: `index.html`, `Build/`, `StreamingAssets/` y los archivos de interfaz deben conservarse juntos.
 3. Publicarlo desde la raíz de un sitio HTTPS. Los recursos usan rutas relativas y admiten la subcarpeta de un repositorio de GitHub Pages.
 4. Para usar el workflow preparado, habilitar **Settings → Pages → GitHub Actions** y ejecutar **Publicar build en GitHub Pages** con la etiqueta de la release.
@@ -77,3 +77,7 @@ Se conservan los avisos de licencia de los modelos, materiales, SDK de Meta, Liv
 La integración de servidor y navegador está en [NexusIntegration](NexusIntegration/README.md). El backend emite JWT web de diez minutos limitados al perfil y al origen de Atlas. El host renueva la sesión y cierra la voz al salir; el secreto de aplicación permanece en el servidor de Nexus.
 
 La conexión con el inicio de sesión y la matrícula debe montarse en el repositorio real de Nexus. El dominio nexus.oscar-vr.iudcdesarrollo.tech sigue sirviendo el antiguo proxy QR.
+
+## Comprobar el micrófono
+
+En el panel **Asistente**, pulsa **Probar micrófono**, permite el acceso y habla. El medidor muestra la señal durante ocho segundos; no graba ni envía audio. Distingue permiso bloqueado, dispositivo ausente y ausencia de señal. Abrir Pages sin una sesión de Nexus permite esta prueba local, pero no activa la conversación con IA.

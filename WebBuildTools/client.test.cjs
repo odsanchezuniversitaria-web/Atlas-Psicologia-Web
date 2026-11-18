@@ -31,3 +31,13 @@ test('Una confirmación de progreso ajena no se presenta como guardada por Nexus
  const f=fixture(t);await f.w.AtlasApp.connect(f.session());f.post({type:'atlas:progress-ack',version:1,profileId:'student-b'});assert.notEqual(f.w.document.getElementById('sync').textContent,'Nexus confirmó la recepción del avance');
  f.post({type:'atlas:progress-ack',version:1,profileId:'student-a'});assert.equal(f.w.document.getElementById('sync').textContent,'Nexus confirmó la recepción del avance');
 });
+test('Sin sesión muestra la causa real y no presenta captura de voz activa',async t=>{
+ const f=fixture(t);f.w.AtlasApp.receive({ready:true,landing:false,status:'Sin conexión · reintento en 8 s',talk:true,systems:[],cases:[]});
+ assert.match(f.w.document.getElementById('speech-status').textContent,/IA sin sesión de Nexus/);
+ assert.equal(f.w.document.getElementById('talk').textContent,'Probar micrófono');assert.equal(f.w.document.getElementById('talk').classList.contains('recording'),false);
+ assert.equal(f.w.document.querySelector('[data-op="listen"]').disabled,true);
+ let tests=0;f.w.AtlasMicrophone={test:()=>tests++,isTesting:()=>false};f.w.document.getElementById('talk').dispatchEvent(new f.w.MouseEvent('pointerdown',{bubbles:true,cancelable:true}));
+ assert.equal(tests,1);assert.ok(!f.unity.some(m=>m.method==='ReceiveInput'&&m.value.talk===true));
+ await f.w.AtlasApp.connect(f.session());f.w.AtlasApp.receive({ready:true,landing:false,status:'Escuchando con LiveKit',talk:false,systems:[],cases:[]});
+ assert.equal(f.w.document.getElementById('speech-status').textContent,'Escuchando con LiveKit');assert.equal(f.w.document.querySelector('[data-op="listen"]').disabled,false);
+});

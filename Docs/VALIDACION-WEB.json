@@ -3,7 +3,7 @@
   "unity": "6000.4.10f1",
   "distribution": "static-github-pages",
   "automatedTests": {
-    "passed": 11,
+    "passed": 16,
     "failed": 0,
     "usesRealAIProviders": false
   },
@@ -74,5 +74,20 @@
       "Publish Pages at its definitive origin and configure iframe microphone policy in Nexus"
     ]
   },
-  "nexusProgressAndOfficialGrades": "Host integration required; local progress and result export are implemented."
+  "nexusProgressAndOfficialGrades": "Host integration required; local progress and result export are implemented.",
+  "microphoneDiagnostic": {
+    "status": "implemented-and-unit-tested",
+    "durationSeconds": 8,
+    "recordsAudio": false,
+    "uploadsAudio": false,
+    "checks": [
+      "User action required",
+      "Signal level",
+      "Silence",
+      "Permission denied",
+      "Late permission cancellation releases microphone"
+    ],
+    "physicalMicrophone": "User must run the browser test to confirm their own device",
+    "sessionState": "Standalone Pages clearly reports missing Nexus session instead of retrying connection status"
+  }
 }

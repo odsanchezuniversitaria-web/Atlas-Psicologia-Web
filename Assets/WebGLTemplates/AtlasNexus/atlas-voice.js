@@ -6,7 +6,7 @@ function quiet(c,value){c.muted=value;for(const audio of c.elements)audio.muted=
 async function close(receiver){const c=connections.get(receiver);if(!c)return;c.closed=true;connections.delete(receiver);clearInterval(c.hello);clearInterval(c.meter);clearTimeout(c.flush);for(const pending of c.pending.values()){clearTimeout(pending.timer);pending.reject(new Error('Connection closed'));}c.pending.clear();for(const meter of c.analysers){try{meter.source.disconnect();meter.analyser.disconnect();meter.silent.disconnect();}catch{}}for(const audio of c.elements){audio.pause();audio.srcObject=null;audio.remove();}try{await c.room.disconnect(true);}catch{}}
 function rpc(receiver,c,method,data){return new Promise((resolve,reject)=>{if(c.closed||!c.agent||data.callerIdentity!==c.agent){reject(new Error('Agent not authorized'));return;}const id=crypto.randomUUID();const timer=setTimeout(()=>{c.pending.delete(id);reject(new Error('Unity action timed out'));},Math.min(12000,data.responseTimeout||10000));c.pending.set(id,{resolve,reject,timer});unity(receiver,{type:'__rpc',id,method,payload:data.payload,_sender:data.callerIdentity},c);});}
 async function open(receiver,config){
- await close(receiver);const LK=window.LivekitClient;if(!LK){throw new Error('LiveKit SDK not loaded');}
+ window.AtlasApp?.voiceError?.('');await close(receiver);const LK=window.LivekitClient;if(!LK){throw new Error('LiveKit SDK not loaded');}
  const room=new LK.Room({adaptiveStream:false,dynacast:false,audioCaptureDefaults:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
  const c={room,epoch:config._epoch,mode:config.mode,closed:false,elements:[],pending:new Map(),analysers:[],agent:'',muted:false,hello:0,meter:0};connections.set(receiver,c);
  room.on(LK.RoomEvent.DataReceived,(bytes,participant,kind,topic)=>{if(c.closed||topic!=='atlas.event'||!participant||bytes.byteLength>15000||c.agent&&participant.identity!==c.agent)return;try{const value=JSON.parse(decoder.decode(bytes));c.agent=participant.identity;value._sender=participant.identity;if(value.type==='ready')clearInterval(c.hello);if(value.type==='agent_state'&&value.state==='speaking')quiet(c,false);unity(receiver,value,c);}catch{}});
@@ -20,12 +20,13 @@ async function open(receiver,config){
  });
  room.on(LK.RoomEvent.Disconnected,()=>{if(!c.closed)unity(receiver,{type:'__error'},c);});
  room.localParticipant.registerRpcMethod('atlas.context',data=>rpc(receiver,c,'atlas.context',data));room.localParticipant.registerRpcMethod('atlas.execute',data=>rpc(receiver,c,'atlas.execute',data));
+ let stage='connection';
  try{
   await room.connect(config.url,config.token,{autoSubscribe:true});if(c.closed)return;
-  await room.startAudio();await room.localParticipant.setMicrophoneEnabled(true,{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1});if(c.mode==='patient')await mic(c,false);
+  await room.startAudio();stage='microphone';await room.localParticipant.setMicrophoneEnabled(true,{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1});if(c.mode==='patient')await mic(c,false);
   const hello=()=>room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({type:'hello'})),{reliable:true,topic:'atlas.control'}).catch(()=>{});
   hello();c.hello=setInterval(hello,1000);c.meter=setInterval(()=>{let sum=0,n=0;for(const m of c.analysers){m.analyser.getFloatTimeDomainData(m.data);for(const value of m.data){sum+=value*value;n++;}}const rms=n?Math.sqrt(sum/n):0;const level=c.muted?0:Math.sqrt(Math.max(0,Math.min(1,(rms-.0015)*12)));unity(receiver,{type:'__level',level},c);},50);
- }catch{if(!c.closed)unity(receiver,{type:'__error'},c);await close(receiver);}
+ }catch(error){if(!c.closed){window.AtlasApp?.voiceError?.(stage==='microphone'?(window.AtlasMicrophone?.describeError(error)||'Revisa el permiso del micrófono.'):'No se pudo conectar con el servicio de voz. Revisa la sesión de Nexus y la red.');unity(receiver,{type:'__error'},c);}await close(receiver);}
 }
 async function mic(c,enabled){const publication=c.room.localParticipant.getTrackPublication(LivekitClient.Track.Source.Microphone);if(!publication?.track)return;if(enabled)await publication.track.unmute();else await publication.track.mute();}
 async function send(receiver,value){

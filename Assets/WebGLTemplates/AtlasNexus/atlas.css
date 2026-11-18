@@ -2,3 +2,5 @@
 @media(max-width:850px){#toolbar{gap:6px;padding:8px 10px}.brand{font-size:15px}.brand span{display:none}#profile-label{font-size:11px;max-width:180px}#sync{font-size:10px;max-width:100px}#toolbar button{min-height:40px;padding:7px 9px;font-size:13px}#panel{width:min(440px,calc(100vw - 20px));right:10px;top:65px;bottom:83px}#panel-content{padding:14px}#home{padding:20px;top:53%;max-height:calc(100dvh - 83px)}#voice-dock{bottom:10px;max-width:calc(100vw - 150px)}#voice-state{display:none}#talk{min-width:150px;font-size:14px;padding:10px}h2{font-size:19px}#panel-content p{font-size:15px}}
 @media(orientation:portrait)and(max-width:650px){#toolbar .brand{display:none}#home h1{font-size:30px}#panel{bottom:86px;width:calc(100vw - 20px)}#home::before{content:"Para explorar con mayor comodidad, gira el celular a horizontal.";display:block;color:var(--cyan);font-size:13px;margin-bottom:14px}}
 
+
+#microphone-diagnostic{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#0b283b}#microphone-status{font-size:14px;margin:12px 0}#microphone-level{width:100%;height:22px}button:disabled{cursor:not-allowed}

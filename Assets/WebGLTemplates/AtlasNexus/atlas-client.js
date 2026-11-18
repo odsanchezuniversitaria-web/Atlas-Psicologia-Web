@@ -2,13 +2,24 @@
 (function(){
 'use strict';const $=id=>document.getElementById(id),cfg=window.ATLAS_CONFIG||{};
 let unity=null,receiver='',state={},toastTimer=0,firstFrame=false,expectedLanding=null,selectedTab='systems',devPrevious=null;
+let voiceFailure='';
 let accessToken='',profile='practice',expiresAt=0,expiryTimer=0,checkpoint=empty();
 const hostOrigins=new Set(cfg.nexusOrigins||[]),mobile=matchMedia('(pointer:coarse)').matches,input={moveX:0,moveY:0,lookX:0,lookY:0,x:.5,y:.5,talk:false,typing:false,ui:false};
 const text=(id,v)=>{if($(id)&&$(id).textContent!==String(v??''))$(id).textContent=String(v??'');};
 function empty(){return {schemaVersion:1,missions:[],milestones:[],flags:{},reports:{},poses:[]};}
 function emit(method,payload){if(unity&&receiver)unity.SendMessage(receiver,method,typeof payload==='string'?payload:JSON.stringify(payload));}
 function configuration(){return {apiBaseUrl:cfg.apiBaseUrl||'https://api.oscar-vr.iudcdesarrollo.tech/api/v1/atlas',accessToken,profileKey:profile,evaluated:false,checkpoint};}
-function configure(){emit('Configure',configuration());text('profile-label',devPrevious?'Modo de pruebas':accessToken?'Nexus · voz vinculada':'Práctica local');text('session-help',accessToken?'Nexus habilitó la voz de Atlas y María.':'Puedes explorar y guardar tu avance en este navegador. Abre desde Nexus para habilitar la IA.');$('logout').hidden=!accessToken;}
+function hasVoiceSession(){return !!accessToken&&Date.now()<expiresAt;}
+function voiceUI(){
+ const enabled=hasVoiceSession();
+ text('speech-status',enabled?(voiceFailure||state.status||'Conectando con el servicio de voz…'):'IA sin sesión de Nexus. La conversación no está habilitada; esto no indica un fallo del micrófono.');
+ text('voice-state',enabled?(voiceFailure?'Revisa el panel Asistente':state.talk?'Te escucho':state.speaking?(state.patientOpen?'María habla':'Atlas habla'):state.thinking?'Preparando respuesta…':'Mantén para hablar'):'IA sin sesión de Nexus');
+ text('talk',enabled?'Mantén para hablar':'Probar micrófono');
+ document.querySelector('[data-op="listen"]').disabled=!enabled;
+ $('talk').classList.toggle('recording',enabled&&!!state.talk);
+ if(!enabled)text('transcript','No se está enviando voz a la IA. Abre desde una sesión válida de Nexus. Puedes comprobar el micrófono con la prueba local de abajo.');
+}
+function configure(){emit('Configure',configuration());voiceUI();text('profile-label',devPrevious?'Modo de pruebas':accessToken?'Nexus · voz vinculada':'Práctica local · IA sin sesión');text('session-help',accessToken?'Nexus habilitó la voz de Atlas y María.':'Puedes explorar y guardar tu avance. La conversación con Atlas y María requiere una sesión de Nexus; el botón Probar micrófono sólo comprueba tu dispositivo.');$('logout').hidden=!accessToken;}
 function toast(message){text('toast',message);$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,6500);}
 function error(message){toast(message);if(!firstFrame)text('loading-text',message);}
 function draftKey(){return 'atlas.psicologia.progress.v1.'+profile;}
@@ -19,11 +30,12 @@ async function connect(value){
  if(!value||typeof value.accessToken!=='string'||value.accessToken.length<32||value.accessToken.length>8192||!Number.isFinite(value.expiresAt)||value.expiresAt<=Date.now())throw new Error('Nexus debe entregar un acceso de voz temporal válido.');
  if(typeof value.profileId!=='string'||!/^[-_a-zA-Z0-9]{1,100}$/.test(value.profileId))throw new Error('Nexus debe entregar un identificador de perfil válido.');
  const changed=profile!==value.profileId;if(changed){save(checkpoint);await window.AtlasVoice?.closeAll();}
+ if(window.AtlasMicrophone?.isTesting())window.AtlasMicrophone.stop('Prueba finalizada al activar la voz de Nexus.');voiceFailure='';
  accessToken=value.accessToken;expiresAt=Math.min(value.expiresAt,Date.now()+3600000);profile=value.profileId;devPrevious=null;
  checkpoint=value.checkpoint?.schemaVersion===1?structuredClone(value.checkpoint):readDraft();clearTimeout(expiryTimer);expiryTimer=setTimeout(()=>{logout();notify('atlas:session-required',{});toast('El acceso de voz terminó. Abre de nuevo Atlas desde Nexus.');},expiresAt-Date.now());
  if(changed&&unity&&!state.landing)command('home');configure();notify('atlas:connected',{});
 }
-async function logout(){save(checkpoint);await window.AtlasVoice?.closeAll();accessToken='';expiresAt=0;clearTimeout(expiryTimer);profile='practice';devPrevious=null;checkpoint=readDraft();if(unity&&!state.landing)command('home');configure();}
+async function logout(){voiceFailure='';save(checkpoint);await window.AtlasVoice?.closeAll();accessToken='';expiresAt=0;clearTimeout(expiryTimer);profile='practice';devPrevious=null;checkpoint=readDraft();if(unity&&!state.landing)command('home');configure();}
 async function api(route,payload={}){
  if(!accessToken||Date.now()>=expiresAt)throw new Error('Abre Atlas desde Nexus para habilitar la voz.');
  if(!['/health','/speech','/livekit/session','/patient/feedback'].includes(route))throw new Error('Operación no disponible.');
@@ -38,6 +50,8 @@ window.addEventListener('message',event=>{
 });
 function unlockAudio(){try{const C=window.AudioContext||window.webkitAudioContext;if(!window.AtlasAudioContext)window.AtlasAudioContext=new C();window.AtlasAudioContext.resume().catch(()=>{});}catch{}}
 function command(op,extra={}){
+ if(op==='listen'&&!hasVoiceSession()){tab('assistant');voiceUI();return;}
+ if(op==='listen'&&window.AtlasMicrophone?.isTesting())window.AtlasMicrophone.stop('Prueba finalizada al activar la conversación.');
  unlockAudio();if(!unity||!receiver){toast('Espera a que termine de cargar el laboratorio.');return;}
  if(op==='start_atlas'||op==='start_patient'||op==='home'){expectedLanding=op==='home';$('scene-loading').hidden=false;setTimeout(()=>{if(expectedLanding!==null){$('scene-loading').hidden=true;expectedLanding=null;toast('La carga está tardando más de lo esperado. Revisa el estado del laboratorio.');}},45000);}
  emit('Command',{op,...extra});
@@ -54,9 +68,9 @@ function receive(value){
  if(value.landing)return;
  document.querySelector('[data-tab="systems"]').hidden=!!value.patientOpen;if(value.patientOpen&&selectedTab==='systems')tab('patient');
  text('assistant-help',value.patientOpen?'Habla con María como en una entrevista educativa. Comienza con un saludo y una pregunta abierta, escucha su respuesta y utiliza Terminar y evaluar para revisar las evidencias.':'Puedes preguntar «¿qué es esto?», «¿para qué sirve?» o pedir «oculta todo menos el corazón». Señala la pieza antes de hablar.');
- text('speech-status',value.status);text('voice-state',value.talk?'Te escucho':value.speaking?(value.patientOpen?'María habla':'Atlas habla'):value.thinking?'Preparando respuesta…':'Mantén para hablar');
- text('speaker-heading',value.patientOpen?'María · entrevista':'Atlas · asistente');text('transcript',value.transcript||'Mantén Hablar o espacio y suelta al terminar.');text('answer',value.answer||'');
- $('talk').classList.toggle('recording',!!value.talk);window.AtlasVoice?.setVolume(value.volume??1);
+ voiceUI();
+ text('speaker-heading',value.patientOpen?'María · entrevista':'Atlas · asistente');if(hasVoiceSession())text('transcript',value.transcript||'Mantén Hablar o espacio y suelta al terminar.');text('answer',value.answer||'');
+ $('talk').classList.toggle('recording',hasVoiceSession()&&!!value.talk);window.AtlasVoice?.setVolume(value.volume??1);
  list('systems',value.systems,v=>v.id,v=>{const b=document.createElement('button');b.addEventListener('click',()=>command('system',{index:(state.systems||[]).findIndex(s=>s.id===v.id)}));return b;},(b,v)=>{b.textContent=(v.visible?'● ':'○ ')+v.name;b.setAttribute('aria-pressed',String(v.visible));});
  list('missions',value.missions,v=>v.index,v=>{const b=document.createElement('button');b.addEventListener('click',()=>command('mission',{index:v.index}));return b;},(b,v)=>{b.textContent=(v.done?'✓ ':'○ ')+v.title;});
  const selection=$('case-select');if(selection.options.length!==(value.cases||[]).length){selection.replaceChildren(...(value.cases||[]).map((c,i)=>new Option(c.title,String(i))));}
@@ -71,7 +85,7 @@ function receive(value){
   list('criteria',result.criteria,(c)=>c.name,c=>{const article=document.createElement('article');article.className='criterion';for(const tag of ['h4','meter','p','p'])article.appendChild(document.createElement(tag));return article;},(article,c)=>{const percent=c.score_percent??(c.observed?100:0);article.children[0].textContent=c.name+' · '+Math.round(percent)+'%';article.children[1].min=0;article.children[1].max=100;article.children[1].value=percent;article.children[2].textContent=c.evidence?'Evidencia: '+c.evidence:'Sin evidencia suficiente';article.children[3].textContent=c.suggestion||c.recommendation||'';});
  }
 }
-function sendInput(patch){Object.assign(input,patch);emit('ReceiveInput',input);input.lookX=input.lookY=0;delete input.down;delete input.up;delete input.cancel;}
+function sendInput(patch){if(!hasVoiceSession()){input.talk=false;if(patch.talk)patch.talk=false;}Object.assign(input,patch);emit('ReceiveInput',input);input.lookX=input.lookY=0;delete input.down;delete input.up;delete input.cancel;}
 function resetInput(){sendInput({moveX:0,moveY:0,lookX:0,lookY:0,talk:false,cancel:true});$('talk').classList.remove('recording');}
 for(const b of document.querySelectorAll('[data-op]'))b.addEventListener('click',()=>command(b.dataset.op,{value:Number(b.dataset.value||0)}));
 for(const b of document.querySelectorAll('[data-tab]'))b.addEventListener('click',()=>tab(b.dataset.tab));
@@ -80,7 +94,7 @@ $('logout').addEventListener('click',logout);
 $('menu-toggle').addEventListener('click',()=>{const collapsed=$('panel').dataset.collapsed!=='true';$('panel').dataset.collapsed=String(collapsed);$('panel').hidden=collapsed;$('menu-toggle').setAttribute('aria-expanded',String(!collapsed));});
 $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Este navegador no permite cambiar a pantalla completa.');}});
 $('vr').addEventListener('click',()=>command('vr'));
-$('talk').addEventListener('pointerdown',e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);unlockAudio();sendInput({talk:true});});
+$('talk').addEventListener('pointerdown',e=>{e.preventDefault();if(!hasVoiceSession()){tab('assistant');window.AtlasMicrophone?.test();return;}e.currentTarget.setPointerCapture(e.pointerId);unlockAudio();sendInput({talk:true});});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('talk').addEventListener(type,()=>sendInput({talk:false}));
 document.addEventListener('focusin',e=>sendInput({typing:!!e.target.closest('input,textarea,select')}));
 document.addEventListener('focusout',()=>sendInput({typing:false}));
@@ -106,6 +120,6 @@ $('developer').addEventListener('click',async()=>{
  else{({accessToken,profile,checkpoint,expiresAt}=devPrevious);devPrevious=null;$('developer').textContent='Modo de pruebas separado';}
  if(unity&&!state.landing)command('home');configure();
 });
-window.AtlasApp={bind:instance=>{unity=instance;window.unityInstance=instance;configure();},ready:name=>{receiver=name;configure();},receive,save,error,command,connect,logout,haptic:()=>{},api};
+window.AtlasApp={voiceError:message=>{voiceFailure=message;voiceUI();},bind:instance=>{unity=instance;window.unityInstance=instance;configure();},ready:name=>{receiver=name;configure();},receive,save,error,command,connect,logout,haptic:()=>{},api};
 checkpoint=readDraft();tab('systems');configure();notify('atlas:ready',{});if(navigator.xr)navigator.xr.isSessionSupported('immersive-vr').then(ok=>{$('vr').hidden=!ok;}).catch(()=>{});
 })();
