@@ -1,6 +1,6 @@
 # Atlas Psicología Web
 
-▶ **[Abrir Atlas en el navegador](https://odsanchezuniversitaria-web.github.io/Atlas-Psicologia-Web/)**
+▶ **[Abrir Atlas en el navegador](https://softwarevalle75-wq.github.io/Atlas-Psicologia-Web/)**
 
 Este enlace abre la aplicación. Para acceder a la voz con IA, Nexus debe entregar una sesión válida.
 
@@ -10,7 +10,7 @@ Copia independiente de Atlas para Unity **6000.4.10f1**, preparada para navegado
 
 ## Entrega al colaborador
 
-1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.4`.
+1. Descargar `Atlas-Psicologia-Web.zip` de la release `web-v0.1.5`.
 2. Descomprimirlo: `index.html`, `Build/`, `StreamingAssets/` y los archivos de interfaz deben conservarse juntos.
 3. Publicarlo desde la raíz de un sitio HTTPS. Los recursos usan rutas relativas y admiten la subcarpeta de un repositorio de GitHub Pages.
 4. Para usar el workflow preparado, habilitar **Settings → Pages → GitHub Actions** y ejecutar **Publicar build en GitHub Pages** con la etiqueta de la release.
@@ -73,7 +73,7 @@ Los ensayos automatizados usan dobles de LiveKit, no consumen proveedores de IA 
 ## Controles
 
 - **PC:** WASD, botón derecho para mirar, arrastrar piezas con botón izquierdo, rueda para escalar y espacio para hablar.
-- **Celular:** joystick y zona táctil de mirada/arrastre; mantener Hablar y soltar al terminar.
+- **Celular:** toca una pieza para identificarla, desliza un dedo para girar y usa dos dedos para acercar, alejar o desplazar la vista. Mantén pulsada una pieza para moverla y añade un segundo dedo para cambiar su tamaño. Corazón, Digestivo, Arterias y Venas tienen accesos directos. En la entrevista, usa el joystick para caminar y desliza para mirar.
 - **WebVR:** botón Entrar en VR; palancas para caminar/girar, agarre para piezas, gatillo para paneles y A/X para hablar. El soporte depende del navegador del visor.
 
 ## Atribuciones

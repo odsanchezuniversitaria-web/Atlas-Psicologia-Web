@@ -122,7 +122,8 @@ namespace Xyla
                     liverTint.a = a;
                     return liverTint;
                 case Vessel:
-                    return system == "venous" ? new Color32(137, 101, 115, a) : new Color32(173, 86, 78, a);
+                    // Retain the atlas colour convention for identification at the scale of thin branches.
+                    return system == "venous" ? new Color32(121, 91, 121, a) : new Color32(181, 78, 68, a);
                 case Brain: return new Color32(202, 171, 159, a);
                 case Muscle: return new Color32(161, 72, 65, a);
                 case Myocardium: return new Color32(133, 58, 58, a);
@@ -165,11 +166,14 @@ namespace Xyla
                 case OuterWall:
                     if (system == "digestive")
                     {
+                        if (Has(label, "stomach")) return new Color32(194, 138, 134, a);
+                        if (Has(label, "jejunum") || Has(label, "duodenum")) return new Color32(196, 145, 131, a);
+                        if (Has(label, "ileum") || Has(label, "ileocecal")) return new Color32(202, 157, 143, a);
+                        if (Has(label, "mesentery") || Has(label, "mesocolon") || Has(label, "mesoappendix")) return new Color32(210, 186, 144, a);
+                        if (Has(label, "colon") || Has(label, "rectum") || Has(label, "appendix")) return new Color32(178, 133, 138, a);
                         if (Has(label, "biliary") || Has(label, "hepatic duct") ||
                             Has(label, "duct of caudate") || Has(label, "cystic duct")) return new Color32(164, 159, 116, a);
                         if (Has(label, "pancreatic duct")) return new Color32(198, 180, 153, a);
-                        if (Has(label, "mesentery") || Has(label, "mesocolon") || Has(label, "mesoappendix"))
-                            return new Color32(210, 186, 144, a);
                         if (Has(label, "taenia")) return new Color32(194, 149, 138, a);
                     }
                     return fallback;

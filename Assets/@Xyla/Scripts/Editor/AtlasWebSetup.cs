@@ -19,7 +19,7 @@ public static class AtlasWebSetup {
   Guard();if(EditorApplication.isPlaying)throw new InvalidOperationException("Detén Play.");
   MakeCopy("AtlasInicio","AtlasWebInicio");MakeCopy("HumanAtlasQuest","AtlasWebLab");
   Prepare("AtlasWebInicio",true);Prepare("AtlasWebLab",false);ConfigureXR();
-  PlayerSettings.productName="Atlas Psicología Web";PlayerSettings.companyName="Oscar VR";PlayerSettings.bundleVersion="0.1.0";
+  PlayerSettings.productName="Atlas Psicología Web";PlayerSettings.companyName="Oscar VR";PlayerSettings.bundleVersion="0.1.5";
   PlayerSettings.WebGL.template="PROJECT:AtlasNexus";PlayerSettings.WebGL.compressionFormat=WebGLCompressionFormat.Brotli;PlayerSettings.WebGL.decompressionFallback=true;PlayerSettings.WebGL.dataCaching=true;PlayerSettings.WebGL.initialMemorySize=256;PlayerSettings.WebGL.maximumMemorySize=1024;
   PlayerSettings.colorSpace=ColorSpace.Linear;PlayerSettings.runInBackground=false;
   PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.WebGL,false);PlayerSettings.SetGraphicsAPIs(BuildTarget.WebGL,new[]{GraphicsDeviceType.OpenGLES3});

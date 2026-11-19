@@ -2,9 +2,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM}=require('jsdom');
 const dir=path.resolve(__dirname,'../Assets/WebGLTemplates/AtlasNexus');
-function fixture(t){
+function fixture(t,mobile=false){
  const dom=new JSDOM(fs.readFileSync(path.join(dir,'index.html'),'utf8'),{url:'https://example.github.io/Atlas/',runScripts:'outside-only'}),w=dom.window;
- t.after(()=>w.close());w.matchMedia=()=>({matches:false});w.structuredClone=structuredClone;w.requestAnimationFrame=f=>f();
+ t.after(()=>w.close());w.matchMedia=()=>({matches:mobile});w.structuredClone=structuredClone;w.requestAnimationFrame=f=>f();
  const sent=[],unity=[];const host={postMessage:(value,origin)=>sent.push({value,origin})};Object.defineProperty(w,'parent',{value:host});
  w.ATLAS_CONFIG={apiBaseUrl:'https://api.example/api/v1/atlas',nexusOrigins:['https://nexus.example']};
  w.eval(fs.readFileSync(path.join(dir,'atlas-client.js'),'utf8'));w.AtlasApp.bind({SendMessage:(target,method,payload)=>unity.push({target,method,value:JSON.parse(payload)})});w.AtlasApp.ready('AtlasWeb');
@@ -40,4 +40,24 @@ test('Sin sesión muestra la causa real y no presenta captura de voz activa',asy
  assert.equal(tests,1);assert.ok(!f.unity.some(m=>m.method==='ReceiveInput'&&m.value.talk===true));
  await f.w.AtlasApp.connect(f.session());f.w.AtlasApp.receive({ready:true,landing:false,status:'Escuchando con LiveKit',talk:false,systems:[],cases:[]});
  assert.equal(f.w.document.getElementById('speech-status').textContent,'Escuchando con LiveKit');assert.equal(f.w.document.querySelector('[data-op="listen"]').disabled,false);
+});
+
+test('Celular conserva el panel elegido, abre las fichas y libera los gestos al entrar a la entrevista',t=>{
+ const {w,unity}=fixture(t,true),doc=w.document,get=id=>doc.getElementById(id);
+ const receive=patch=>w.AtlasApp.receive({ready:true,landing:false,vr:false,patientOpen:false,systems:[],cases:[],...patch});
+ receive({landing:true});receive({});
+ assert.equal(get('panel').hidden,true);
+ assert.equal(get('touch-studybar').hidden,false);
+ assert.equal(get('joystick').hidden,true);
+ assert.deepEqual(unity.filter(x=>x.method==='TouchGesture').map(x=>x.value.kind),['enable']);
+ get('menu-toggle').click();receive({});assert.equal(get('panel').hidden,false);
+ doc.querySelector('.study-grid [data-study="heart"]').click();
+ assert.deepEqual(unity.at(-1).value,{op:'study',target:'heart'});assert.equal(get('panel').hidden,true);
+ receive({study:'heart',part:{name:'Ventrículo izquierdo'}});
+ assert.equal(doc.querySelector('#touch-studybar [data-study="heart"]').getAttribute('aria-pressed'),'true');
+ assert.match(get('touch-fact').textContent,/Ventrículo izquierdo/);
+ get('part').scrollIntoView=()=>{};get('touch-fact').click();assert.equal(get('panel').hidden,false);
+ receive({patientOpen:true});assert.equal(get('touch-studybar').hidden,true);assert.equal(get('joystick').hidden,false);
+ receive({});assert.equal(get('panel').hidden,true);assert.equal(get('joystick').hidden,true);
+ assert.equal(unity.filter(x=>x.method==='TouchGesture'&&x.value.kind==='enable').length,2);
 });

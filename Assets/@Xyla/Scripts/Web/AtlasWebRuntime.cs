@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using WebXR;
 namespace Xyla {
 [DefaultExecutionOrder(-10000)]
-public sealed class AtlasWebRuntime : MonoBehaviour {
+public sealed partial class AtlasWebRuntime : MonoBehaviour {
  public static AtlasWebRuntime Current {get;private set;}
  [Header("Referencias editables")]public Camera view;public Transform player;public WebXRController leftController,rightController;public LineRenderer laser;public bool landing;
  [Header("Controles PC / móvil")][Range(.2f,5f)]public float moveSpeed=1.5f;[Range(.02f,.5f)]public float lookSensitivity=.10f;public float rayDistance=4f;
@@ -38,8 +38,12 @@ public sealed class AtlasWebRuntime : MonoBehaviour {
   touchTalk=v.Value<bool?>("talk")??touchTalk;typing=v.Value<bool?>("typing")??typing;uiBlocked=v.Value<bool?>("ui")??uiBlocked;
   if(v.Value<bool?>("cancel")==true)ResetInput();
  }
- public void ResetInput(){moveX=moveY=lookX=lookY=0;touchTalk=false;pointerDown=false;pointerUp=true;Release();}
+ public void ResetInput(){EndTouchHold();moveX=moveY=lookX=lookY=0;touchTalk=false;pointerDown=false;pointerUp=true;Release();}
  void XRChanged(WebXRState state,int count,Rect left,Rect right){
+  if (state==WebXRState.VR||state==WebXRState.AR) {
+   if (touchEnabled && !string.IsNullOrEmpty(studyId) && atlas) atlas.PrepareWebStudyColliders();
+   RestoreStudyCamera();
+  }
   InVR=state==WebXRState.VR||state==WebXRState.AR;if(controlVisuals!=null)foreach(var renderer in controlVisuals)renderer.enabled=InVR;view.stereoTargetEye=InVR?StereoTargetEyeMask.Both:StereoTargetEyeMask.None;ResetInput();
   if(!InVR){view.transform.localPosition=new Vector3(0,eyeHeight,-.75f);view.transform.localRotation=Quaternion.identity;}
   foreach(var pair in canvasEnabled)if(pair.Key)pair.Key.enabled=InVR&&pair.Value;nextCanvas=0;nextState=0;
@@ -54,7 +58,7 @@ public sealed class AtlasWebRuntime : MonoBehaviour {
   if(Time.frameCount-startedFrame<2)return;
   if(Time.unscaledTime>=nextCanvas){nextCanvas=Time.unscaledTime+.5f;AdaptCanvases();}
   if(landing&&InVR){var ray=Pointer();HandleVRUI(ray);laser.enabled=true;laser.SetPosition(0,ray.origin);laser.SetPosition(1,ray.GetPoint(rayDistance));}
-  if(!landing&&atlas&&atlas.Voice){HandleMovement();HandlePointer();HandleTalk();RestorePoses();}
+  if(!landing&&atlas&&atlas.Voice){if (!TouchExploration()) { HandleMovement(); HandlePointer(); } HandleTalk();RestorePoses();}
   if(Time.unscaledTime>=nextState){nextState=Time.unscaledTime+.25f;PublishState();}
   pointerDown=pointerUp=false;lookX=lookY=0;
  }
@@ -160,7 +164,9 @@ public sealed class AtlasWebRuntime : MonoBehaviour {
    if(op=="vr"){WebXRManager.Instance.ToggleVR();return;}
    if(op=="ar"){WebXRManager.Instance.ToggleAR();return;}
    if(!atlas||!atlas.Voice)throw new InvalidOperationException("Espera a que termine de preparar el laboratorio.");
+   if (op=="system"||op=="none"||op=="all"||op=="reset"||op=="undo"||op=="scale"||op=="rotate") studyId="";
    switch(op){
+    case "study": ShowWebStudy(value.Value<string>("target"));break;
     case "system":atlas.ToggleSystem(index);break;case "all":atlas.ShowAllSystems();break;case "none":atlas.HideAllSystems();break;case "reset":Release();atlas.ResetAtlas();SavePoses();break;case "undo":Release();atlas.UndoLast();SavePoses();break;
     case "scale":if(Held)atlas.ManipulatePart(atlas.data.parts[Held.Index].id,"scale",number);else atlas.ScaleModel(number);break;
     case "rotate":atlas.RotateModel(number);break;case "return":if(Pointed)Pointed.RequestReturnToOrigin();break;
@@ -185,7 +191,7 @@ public sealed class AtlasWebRuntime : MonoBehaviour {
   if(!landing&&atlas&&atlas.Voice){
    var systems=new JArray();for(int i=0;i<AtlasSystems.Ids.Length;i++)systems.Add(new JObject{["name"]=AtlasSystems.Names[i],["id"]=AtlasSystems.Ids[i],["visible"]=atlas.IsSystemVisible(i)});
    var patient=atlas.patientSimulation;var missions=new JArray();for(int i=0;i<atlas.psychologyPanel.missions.Length;i++)missions.Add(new JObject{["title"]=atlas.psychologyPanel.missions[i].title,["index"]=i,["done"]=AtlasWebProgress.GetInt("Atlas.Psychology.Mission."+i)==1});
-   state["systems"]=systems;state["missions"]=missions;state["patientOpen"]=patient.IsOpen;state["status"]=patient.IsOpen?patient.voice.Status:atlas.Voice.Status;
+   state["study"]=studyId;state["systems"]=systems;state["missions"]=missions;state["patientOpen"]=patient.IsOpen;state["status"]=patient.IsOpen?patient.voice.Status:atlas.Voice.Status;
    state["transcript"]=patient.IsOpen?patient.voice.Transcript:atlas.Voice.Transcript;state["answer"]=patient.IsOpen?patient.voice.Answer:atlas.Voice.Answer;
    state["volume"]=atlas.Voice.VoiceVolume;
    state["speaking"]=patient.IsOpen?patient.voice.Speaking:atlas.Voice.Speaking;state["thinking"]=patient.IsOpen?patient.voice.WaitingForReply:atlas.Voice.Busy;state["talk"]=TalkHeld;

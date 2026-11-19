@@ -2,7 +2,7 @@
 (function(){
 'use strict';const $=id=>document.getElementById(id),cfg=window.ATLAS_CONFIG||{};
 let unity=null,receiver='',state={},toastTimer=0,firstFrame=false,expectedLanding=null,selectedTab='systems',devPrevious=null;
-let voiceFailure='';
+let voiceFailure='',touch=null,markTimer=0;
 let accessToken='',profile='practice',expiresAt=0,expiryTimer=0,checkpoint=empty();
 const hostOrigins=new Set(cfg.nexusOrigins||[]),mobile=matchMedia('(pointer:coarse)').matches,input={moveX:0,moveY:0,lookX:0,lookY:0,x:.5,y:.5,talk:false,typing:false,ui:false};
 const text=(id,v)=>{if($(id)&&$(id).textContent!==String(v??''))$(id).textContent=String(v??'');};
@@ -60,18 +60,50 @@ function command(op,extra={}){
 }
 function tab(name){selectedTab=name;for(const section of document.querySelectorAll('[data-page]'))section.hidden=section.dataset.page!==name;for(const button of document.querySelectorAll('[data-tab]'))button.classList.toggle('active',button.dataset.tab===name);}
 function list(container,values,key,make,update){const parent=$(container),existing=new Map([...parent.children].map(child=>[child.dataset.key,child]));for(const value of values||[]){const id=String(key(value));let item=existing.get(id);if(!item){item=make(value);item.dataset.key=id;parent.appendChild(item);}existing.delete(id);update(item,value);}for(const old of existing.values())old.remove();}
+function updateTouchUI(){
+ const exploring=mobile&&!state.landing&&!state.vr&&!state.patientOpen&&$('panel').hidden;
+ $('touch-studybar').hidden=$('touch-actions').hidden=!exploring;
+ const details=$('touch-details');
+ let hasDetail=false;
+ for(const button of details.children){
+  const visible=button.dataset.family.split(' ').includes(state.study)&&button.dataset.study!==state.study;
+  button.hidden=!visible;hasDetail=hasDetail||visible;
+ }
+ details.hidden=!exploring||!hasDetail;
+ $('joystick').hidden=!state.patientOpen;
+ $('touch-fact').hidden=!state.part;
+ if(state.part)text('touch-fact',state.part.name+' · Ficha');
+ for(const button of document.querySelectorAll('[data-study]')){const pressed=String(button.dataset.study===state.study);if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);}
+}
+function setPanel(open){
+ $('panel').dataset.collapsed=String(!open);
+ $('panel').hidden=!!state.landing||!open;
+ $('menu-toggle').setAttribute('aria-expanded',String(open));
+ updateTouchUI();
+}
 function receive(value){
- if(value.error){error(value.error);return;}state=value;
+ if(value.error){error(value.error);return;}const previous=state;state=value;
  if(value.ready&&!firstFrame){firstFrame=true;requestAnimationFrame(()=>requestAnimationFrame(()=>$('loading').hidden=true));notify('atlas:ready',{version:1});}
  if(expectedLanding!==null&&value.landing===expectedLanding&&value.ready){expectedLanding=null;$('scene-loading').hidden=true;}
  document.body.classList.toggle('in-vr',!!value.vr);$('home').hidden=!value.landing;$('panel').hidden=!!value.landing||$('panel').dataset.collapsed==='true';$('voice-dock').hidden=!!value.landing;$('touch-controls').hidden=!mobile||value.landing||value.vr;$('crosshair').hidden=!!value.landing||mobile||value.vr;
+ if(mobile&&value.ready&&!value.vr&&!value.landing&&(previous.landing||!previous.ready||previous.vr||!!previous.patientOpen!==!!value.patientOpen)){
+  touch?.cancel();
+  setPanel(!!value.patientOpen);
+  if(!value.patientOpen)emit('TouchGesture',{kind:'enable'});
+ }
+ updateTouchUI();
  if(value.landing)return;
  document.querySelector('[data-tab="systems"]').hidden=!!value.patientOpen;if(value.patientOpen&&selectedTab==='systems')tab('patient');
  text('assistant-help',value.patientOpen?'Habla con María como en una entrevista educativa. Comienza con un saludo y una pregunta abierta, escucha su respuesta y utiliza Terminar y evaluar para revisar las evidencias.':'Puedes preguntar «¿qué es esto?», «¿para qué sirve?» o pedir «oculta todo menos el corazón». Señala la pieza antes de hablar.');
  voiceUI();
  text('speaker-heading',value.patientOpen?'María · entrevista':'Atlas · asistente');if(hasVoiceSession())text('transcript',value.transcript||'Mantén Hablar o espacio y suelta al terminar.');text('answer',value.answer||'');
  $('talk').classList.toggle('recording',hasVoiceSession()&&!!value.talk);window.AtlasVoice?.setVolume(value.volume??1);
- list('systems',value.systems,v=>v.id,v=>{const b=document.createElement('button');b.addEventListener('click',()=>command('system',{index:(state.systems||[]).findIndex(s=>s.id===v.id)}));return b;},(b,v)=>{b.textContent=(v.visible?'● ':'○ ')+v.name;b.setAttribute('aria-pressed',String(v.visible));});
+ list('systems',value.systems,v=>v.id,v=>{const b=document.createElement('button');b.addEventListener('click',()=>command('system',{index:(state.systems||[]).findIndex(s=>s.id===v.id)}));return b;},(b,v)=>{
+  const partial=v.visible&&!!value.study&&!(value.study==='arteries'&&v.id==='arterial')&&!(value.study==='digestive'&&v.id==='digestive');
+  const label=(partial?'◐ ':v.visible?'● ':'○ ')+v.name+(partial?' · parcial':'');
+  if(b.textContent!==label)b.textContent=label;
+  b.setAttribute('aria-pressed',partial?'mixed':String(v.visible));
+ });
  list('missions',value.missions,v=>v.index,v=>{const b=document.createElement('button');b.addEventListener('click',()=>command('mission',{index:v.index}));return b;},(b,v)=>{b.textContent=(v.done?'✓ ':'○ ')+v.title;});
  const selection=$('case-select');if(selection.options.length!==(value.cases||[]).length){selection.replaceChildren(...(value.cases||[]).map((c,i)=>new Option(c.title,String(i))));}
  if(document.activeElement!==selection)selection.value=String(value.caseIndex||0);
@@ -86,27 +118,36 @@ function receive(value){
  }
 }
 function sendInput(patch){if(!hasVoiceSession()){input.talk=false;if(patch.talk)patch.talk=false;}Object.assign(input,patch);emit('ReceiveInput',input);input.lookX=input.lookY=0;delete input.down;delete input.up;delete input.cancel;}
-function resetInput(){sendInput({moveX:0,moveY:0,lookX:0,lookY:0,talk:false,cancel:true});$('talk').classList.remove('recording');}
+function resetInput(){touch?.cancel();sendInput({moveX:0,moveY:0,lookX:0,lookY:0,talk:false,cancel:true});$('talk').classList.remove('recording');}
 for(const b of document.querySelectorAll('[data-op]'))b.addEventListener('click',()=>command(b.dataset.op,{value:Number(b.dataset.value||0)}));
 for(const b of document.querySelectorAll('[data-tab]'))b.addEventListener('click',()=>tab(b.dataset.tab));
 $('case-select').addEventListener('change',e=>command('case',{index:Number(e.target.value)}));$('voice-volume').addEventListener('input',e=>command('volume',{value:Number(e.target.value)}));
 $('logout').addEventListener('click',logout);
-$('menu-toggle').addEventListener('click',()=>{const collapsed=$('panel').dataset.collapsed!=='true';$('panel').dataset.collapsed=String(collapsed);$('panel').hidden=collapsed;$('menu-toggle').setAttribute('aria-expanded',String(!collapsed));});
+$('menu-toggle').addEventListener('click',()=>setPanel($('panel').hidden));
+for(const button of document.querySelectorAll('[data-study]'))button.addEventListener('click',()=>{
+ command('study',{target:button.dataset.study});
+ if(mobile)setPanel(false);
+});
+$('touch-frame').addEventListener('click',()=>emit('TouchGesture',{kind:'frame'}));
+$('touch-fact').addEventListener('click',()=>{tab('systems');setPanel(true);requestAnimationFrame(()=>$('part').scrollIntoView({block:'nearest'}));});
 $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Este navegador no permite cambiar a pantalla completa.');}});
 $('vr').addEventListener('click',()=>command('vr'));
-$('talk').addEventListener('pointerdown',e=>{e.preventDefault();if(!hasVoiceSession()){tab('assistant');window.AtlasMicrophone?.test();return;}e.currentTarget.setPointerCapture(e.pointerId);unlockAudio();sendInput({talk:true});});
+$('talk').addEventListener('pointerdown',e=>{e.preventDefault();if(!hasVoiceSession()){tab('assistant');setPanel(true);window.AtlasMicrophone?.test();return;}e.currentTarget.setPointerCapture(e.pointerId);unlockAudio();sendInput({talk:true});});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])$('talk').addEventListener(type,()=>sendInput({talk:false}));
 document.addEventListener('focusin',e=>sendInput({typing:!!e.target.closest('input,textarea,select')}));
 document.addEventListener('focusout',()=>sendInput({typing:false}));
-document.addEventListener('pointermove',e=>{input.ui=!!e.target.closest('button,input,select,#panel,#home,#toolbar,dialog');sendInput({ui:input.ui});},{passive:true});
+document.addEventListener('pointermove',e=>{const ui=!!e.target.closest('button,input,select,#panel,#home,#toolbar,dialog');if(ui!==input.ui)sendInput({ui});},{passive:true});
 const stick=$('joystick');let stickId=null;
 stick.addEventListener('pointerdown',e=>{stickId=e.pointerId;stick.setPointerCapture(stickId);updateStick(e);});
 function updateStick(e){if(e.pointerId!==stickId)return;const r=stick.getBoundingClientRect(),x=Math.max(-1,Math.min(1,(e.clientX-r.left-r.width/2)/(r.width*.35))),y=Math.max(-1,Math.min(1,(r.top+r.height/2-e.clientY)/(r.height*.35)));sendInput({moveX:x,moveY:y});stick.firstElementChild.style.transform='translate('+x*29+'px,'+-y*29+'px)';}
 stick.addEventListener('pointermove',updateStick);for(const kind of ['pointerup','pointercancel','lostpointercapture'])stick.addEventListener(kind,e=>{if(e.pointerId!==stickId)return;stickId=null;sendInput({moveX:0,moveY:0});stick.firstElementChild.style.transform='';});
-let lookId=null,lastX=0,lastY=0;
-const look=$('look-pad');look.addEventListener('pointerdown',e=>{lookId=e.pointerId;look.setPointerCapture(lookId);lastX=e.clientX;lastY=e.clientY;sendInput({x:e.clientX/innerWidth,y:1-e.clientY/innerHeight,down:true,ui:false});});
-look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;sendInput({x:e.clientX/innerWidth,y:1-e.clientY/innerHeight,lookX:e.clientX-lastX,lookY:-(e.clientY-lastY),ui:false});lastX=e.clientX;lastY=e.clientY;});
-for(const kind of ['pointerup','pointercancel','lostpointercapture'])look.addEventListener(kind,e=>{if(e.pointerId!==lookId)return;lookId=null;sendInput({up:true,lookX:0,lookY:0});});
+touch=window.AtlasTouch?.bind($('look-pad'),{
+ canvas:$('unity-canvas'),enabled:()=>mobile&&!state.landing&&!state.vr,patient:()=>!!state.patientOpen,
+ send:gesture=>emit('TouchGesture',gesture),onLook:(x,y)=>sendInput({lookX:x,lookY:y,ui:false}),
+ mark:(point,kind)=>{const marker=$('touch-mark');marker.hidden=false;marker.dataset.kind=kind;
+  marker.style.left=point.x+'px';marker.style.top=point.y+'px';
+  clearTimeout(markTimer);markTimer=setTimeout(()=>marker.hidden=true,240);}
+});
 window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInput();}});
 window.addEventListener('pagehide',()=>{resetInput();save(checkpoint);});
 

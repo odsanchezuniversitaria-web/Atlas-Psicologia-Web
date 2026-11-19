@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-18",
+  "date": "2026-11-19",
   "unity": "6000.4.10f1",
   "distribution": "static-github-pages",
   "automatedTests": {
-    "passed": 20,
+    "passed": 27,
     "failed": 0,
     "usesRealAIProviders": false
   },
@@ -16,10 +16,10 @@
   },
   "webglBuild": {
     "status": "succeeded",
-    "bytes": 155647299,
+    "bytes": 155628635,
     "output": "Builds/AtlasPages",
     "unity": "6000.4.10f1",
-    "release": "web-v0.1.4"
+    "release": "web-v0.1.5"
   },
   "browserSmokeTest": {
     "status": "passed",
@@ -91,7 +91,7 @@
     "sessionState": "Standalone Pages clearly reports missing Nexus session instead of retrying connection status",
     "inputSelector": "Lists browser audio inputs, displays opened track label, reuses selected device for both LiveKit roles, retains peak level"
   },
-  "webShellRelease": "web-v0.1.3",
+  "webShellRelease": "web-v0.1.5",
   "anatomicalSurfaces": {
     "release": "web-v0.1.4",
     "parts": 2234,
@@ -130,5 +130,33 @@
       }
     ],
     "physicalMobileOrQuestFPS": "Unmeasured"
+  },
+  "mobileAnatomyStudies": {
+    "date": "2026-11-19",
+    "release": "web-v0.1.5",
+    "catalogMeshes": {
+      "heart": 23,
+      "digestive": 106,
+      "arteries": 639,
+      "veins": 395
+    },
+    "desktop": "Chrome WebGL, four study views rendered",
+    "mobile": "Chrome with emulated touch input, 390×844 portrait and 844×390 landscape",
+    "picked": {
+      "heart": "Pared del ventrículo",
+      "digestive": "Porción distal del yeyuno",
+      "arteries": "Conjunto de las arterias perforantes",
+      "veins": "Vena testicular derecha"
+    },
+    "navigationDidNotDetach": true,
+    "holdAndDragSavedPiece": "FJ2428",
+    "otherStudyViews": [
+      "valves",
+      "coronary",
+      "hepatobiliary",
+      "portal"
+    ],
+    "runtimeErrors": 0,
+    "physicalPhoneTested": false
   }
 }
